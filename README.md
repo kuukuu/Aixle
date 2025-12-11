@@ -42,7 +42,17 @@ It acts as the "axle" of your training—analyzing your data and driving your pe
 Set Apps Script triggers to run `fetchAndLogActivities` at 2:00 AM and `generateOptimalZwiftWorkoutsAutoByGemini` at 6:00 AM.
 
 ### 4. Sync
-Use the included `WatchZwiftZwo.ps1` (Windows) or Google Drive for Desktop to sync the `Aixle_Workouts` folder to your Zwift directory.
+#### For Windows Users (Aixle Sync Agent)
+Use the included `WatchZwiftZwo.ps1` script. It will automatically create an **"Aixle"** category inside Zwift and sync your workouts there.
+
+1.  Install **Google Drive for Desktop**.
+2.  Open `WatchZwiftZwo.ps1` with a text editor and update the top configuration:
+    ```powershell
+    $sourceFolder = "G:\My Drive\Aixle_Workouts" # Your Google Drive path
+    $zwiftId = "123456"                          # Your Zwift ID
+    ```
+3.  Right-click the file and select "Run with PowerShell".
+    *   You will see a new folder named "Aixle" in your Zwift workout selection screen.
 
 ## ⚠️ Disclaimer
 Aixle is an experimental tool. Use the generated workouts at your own risk.
