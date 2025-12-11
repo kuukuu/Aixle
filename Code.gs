@@ -32,7 +32,7 @@ const USER_SETTINGS = {
   // System Configuration
   SPREADSHEET_ID: "YOUR_SPREADSHEET_ID", // ID of the Google Sheet for logging
   SHEET_NAME: "training_log",
-  WORKOUT_FOLDER: "Aixle_Workouts",      // ★ Changed to match brand name
+  WORKOUT_FOLDER: "Aixle_Workouts",      // Google Drive folder name
   EMAIL_TO: "your_email@example.com" 
 };
 
@@ -76,7 +76,9 @@ const TRANSLATIONS = {
     greeting: "Here is your Aixle training plan for today.",
     phase_title: "Current Phase",
     weeks_to_goal: "Weeks to Goal",
+    weeks_unit: "", // English usually doesn't need unit here or " weeks"
     focus: "Focus",
+    goal_section: "Current Goal",
     status: "Athlete Status",
     recommendation_title: "★ BEST RECOMMENDATION ★",
     why_title: "【Why / Reason】",
@@ -89,7 +91,9 @@ const TRANSLATIONS = {
     greeting: "お疲れ様です。Aixleが分析した本日の推奨メニューです。",
     phase_title: "現在のフェーズ",
     weeks_to_goal: "目標まで",
+    weeks_unit: "週", // Added unit for Japanese
     focus: "注力ポイント",
+    goal_section: "【設定目標】",
     status: "コンディション",
     recommendation_title: "★ 本日の推奨メニュー ★",
     why_title: "【選定理由】",
@@ -102,7 +106,9 @@ const TRANSLATIONS = {
     greeting: "Aquí tienes tu plan de entrenamiento de Aixle para hoy.",
     phase_title: "Fase Actual",
     weeks_to_goal: "Semanas para el objetivo",
+    weeks_unit: "",
     focus: "Enfoque",
+    goal_section: "Objetivo Actual",
     status: "Estado del Atleta",
     recommendation_title: "★ MEJOR RECOMENDACIÓN ★",
     why_title: "【Razón】",
@@ -115,7 +121,9 @@ const TRANSLATIONS = {
     greeting: "Voici votre plan d'entraînement Aixle pour aujourd'hui.",
     phase_title: "Phase Actuelle",
     weeks_to_goal: "Semaines avant l'objectif",
+    weeks_unit: "",
     focus: "Focus",
+    goal_section: "Objectif Actuel",
     status: "Statut de l'athlète",
     recommendation_title: "★ MEILLEURE RECOMMANDATION ★",
     why_title: "【Raison】",
@@ -218,7 +226,7 @@ function generateOptimalZwiftWorkoutsAutoByGemini() {
 
     if (result.success) {
       const safeType = type.replace(/[^a-zA-Z0-9]/g, ""); 
-      // ★ Updated Prefix to Aixle_
+      // File name uses "Aixle_" prefix for Drive organization
       const fileName = `Aixle_${safeType}_${fileDateStr}.zwo`;
       
       const blob = Utilities.newBlob(result.xml, "text/xml", fileName);
@@ -362,6 +370,10 @@ function createPrompt(type, summary, phaseInfo, dateStr) {
   const langMap = { "ja": "Japanese", "en": "English", "es": "Spanish", "fr": "French" };
   const analysisLang = langMap[USER_SETTINGS.LANGUAGE] || "English";
 
+  // Zwift Display Name (Clean, short name without "Aixle_" prefix)
+  const safeType = type.replace(/[^a-zA-Z0-9]/g,"");
+  const zwiftDisplayName = `${safeType}_${dateStr}`; 
+
   return `
 You are an expert cycling coach using the logic of Coggan, Friel, and Seiler.
 Generate a Zwift workout (.zwo) and evaluate its suitability.
@@ -385,7 +397,7 @@ Generate a Zwift workout (.zwo) and evaluate its suitability.
   - You MUST include motivational or instructional text messages.
   - **LANGUAGE: Messages MUST be in ENGLISH.** (Even if the user's language is different, Zwift works best with English text).
   - Nest them: \`<SteadyState ... ><TextEvent timeoffset="10" message="Keep pushing!"/></SteadyState>\`
-  - Name Format: <name>Aixle_${type.replace(/[^a-zA-Z0-9]/g,"")}_${dateStr}</name>
+  - **Workout Name:** The <name> tag MUST be exactly: "${zwiftDisplayName}" (Do NOT add "Aixle_" prefix here).
 
 **4. Evaluate Recommendation (1-10):**
 - Logic: Based on the **Current Phase** and **TSB**, is "${type}" correct?
@@ -396,7 +408,7 @@ Generate a Zwift workout (.zwo) and evaluate its suitability.
   "explanation": "Strategy explanation in **${analysisLang}**.",
   "recommendation_score": (integer 1-10),
   "recommendation_reason": "Reason based on Phase(${phaseInfo.phaseName}) and TSB in **${analysisLang}**.",
-  "xml": "<workout_file>...<author>Aixle AI Coach</author><name>Aixle_${type.replace(/[^a-zA-Z0-9]/g,"")}_${dateStr}</name>...valid xml...</workout_file>"
+  "xml": "<workout_file>...<author>Aixle AI Coach</author><name>${zwiftDisplayName}</name>...valid xml...</workout_file>"
 }
 `;
 }
@@ -414,12 +426,17 @@ function sendSmartSummaryEmail(summary, phaseInfo, generatedResults) {
 
   let body = `${t.greeting}\n\n`;
 
+  // Phase & Goal Info
   body += `
 ===================================
 ${t.phase_title}: ${phaseInfo.phaseName}
-(${t.weeks_to_goal}: ${phaseInfo.weeksOut})
+(${t.weeks_to_goal}: ${phaseInfo.weeksOut}${t.weeks_unit})
 ${t.focus}: ${phaseInfo.focus}
 ===================================
+${t.goal_section}
+${USER_SETTINGS.GOAL_DESCRIPTION}
+(Target: ${USER_SETTINGS.TARGET_DATE})
+
 ${t.status}:
 CTL: ${summary.ctl_90.toFixed(1)} / TSB: ${summary.tsb_current.toFixed(1)}
 
