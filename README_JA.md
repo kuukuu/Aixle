@@ -42,7 +42,17 @@
 Apps Scriptのトリガー設定で、`fetchAndLogActivities` を午前2時、`generateOptimalZwiftWorkoutsAutoByGemini` を午前6時に実行するようにセットします。
 
 ### 4. 同期設定
-同梱の `WatchZwiftZwo.ps1` (Windows用) を使うか、Google Driveデスクトップ版を使用して、`Aixle_Workouts` フォルダをZwiftのワークアウトフォルダと同期させてください。
+#### Windows の場合 (Aixle Sync Agent)
+同梱の `WatchZwiftZwo.ps1` を使用すると、Zwift内に自動的に **「Aixle」** というカテゴリフォルダが作成され、そこにワークアウトが同期されます。
+
+1.  PCに **Google Drive (パソコン版)** をインストールします。
+2.  `WatchZwiftZwo.ps1` をメモ帳などで開き、冒頭の設定を書き換えます：
+    ```powershell
+    $sourceFolder = "G:\マイドライブ\Aixle_Workouts" # Googleドライブのパス
+    $zwiftId = "123456"                             # Zwift ID (ドキュメントフォルダを確認)
+    ```
+3.  ファイルを右クリックし「PowerShell で実行」を選択します。
+    *   Zwiftのワークアウト選択画面の左側に「Aixle」というフォルダが出現すれば成功です。
 
 ## ⚠️ 免責事項
 本ツールは実験的なプロジェクトです。トレーニングの実施は自己責任で行ってください。
